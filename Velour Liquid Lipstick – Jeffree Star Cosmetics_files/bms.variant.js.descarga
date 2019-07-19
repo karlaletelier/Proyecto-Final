@@ -1,0 +1,142 @@
+var BOLD = BOLD || {};
+BOLD.BMS = BOLD.BMS || {};
+BOLD.BMS.JSC = BOLD.BMS.JSC || {};
+
+BOLD.BMS.JSC.Variant = function($) {
+    "use strict";
+
+    var selected = {
+        item: null,
+        get get() {
+            return this.item;
+        },
+        set set(item) {
+            this.item = item;
+
+            if(this.item) {
+                var header = document.querySelector(".swatch .header");
+                var title = item.title.replace(/'/g, "\\'");
+                var itemTitle = item.title;
+
+                var element = document.querySelector("input[type='radio'][value='" + title + "']"),
+                  dataDescriptionSelector = document.querySelector('label[data-value="'+title+'"]');
+                var swatchHoverImage = document.querySelector('.image-swatch-on-hover');
+
+                if ( dataDescriptionSelector) {
+                  var dataDescription = dataDescriptionSelector.getAttribute('data-description') || '';
+                  if ( dataDescription != '' )
+                  itemTitle = item.title + ': ' + dataDescription;
+                  else
+                  itemTitle = item.title;
+                }
+
+                if (swatchHoverImage) {
+                  var dataImageSelector = dataDescriptionSelector.getAttribute('data-image-hover') || '';
+                  if (dataImageSelector != '')
+                    swatchHoverImage.setAttribute('src', dataImageSelector);
+                }
+                if(element) {
+                    //element.checked = true;
+                    element.click();
+                }
+                //document.getElementById("product-selectors").value = item.id;
+                if (header) {
+                    header.textContent = itemTitle;
+                    header.setAttribute('data-description', itemTitle);
+                }
+            }
+        }
+    };
+
+    function init(variant) {
+        selected.set = variant;
+        bind();
+        Color.init();
+        SwatchName.init();
+    }
+
+    function bind() {
+        BOLD.common.eventEmitter.on("BOLD_COMMON_variant_changed", function(variant) {
+            selected.set = variant;
+        });
+    }
+
+    var SwatchName = function() {
+      function init() {
+        changeName();
+      }
+
+      function changeName() {
+        var element = document.querySelectorAll('.swatch-element.color label'),
+          headerElement = document.querySelector('.swatch-header-description');
+
+        for ( var i = 0; i < element.length; i++  ) {
+          element[i].addEventListener('mouseover', function () {
+            var variantDescription = this.getAttribute('data-description'),
+              variantTitle = this.getAttribute('data-value');
+              if ( variantDescription )
+                headerElement.textContent = variantTitle + ': ' + variantDescription;
+              else
+                headerElement.textContent = variantTitle;
+          });
+          element[i].addEventListener('mouseout', function () {
+            var headerElementDescription = headerElement.getAttribute('data-description');
+            headerElement.textContent = headerElementDescription;
+          });
+        }
+      }
+
+      return {
+        init: init
+      }
+    }();
+
+    var Color = function() {
+        var list = {};
+
+        function init() {
+            setBackground();
+        }
+
+        function add(content) {
+            var type = BOLD.BMS.Common.slugify(content.variant_color_name);
+            list[type] = {
+                type: type,
+                name: content.variant_color_name,
+                isEnabled: content.variant_color_enabled,
+                image: content.variant_color_image,
+                rgb: content.variant_color_rgb
+            }
+        }
+
+        function setBackground() {
+            for(var key in list) {
+                var item = list[key];
+                var element = document.querySelector(".swatch__element-input[value='" + item.name + "']");
+                if (element) {
+                    var target = element.closest(".swatch-element").querySelector("label");
+
+                    if (item.image) {
+                        target.style.backgroundImage = "url('" + item.image + "')";
+                    } else {
+                        target.style.backgroundColor = item.rgb;
+                    }
+                }
+            }
+
+            // var parent = element.closest(".swatch-element");
+            // parent.querySelector("label span").style.display = "inline";
+        }
+
+        return {
+            init: init,
+            add: add
+        }
+    }();
+
+    return {
+        SwatchName: SwatchName,
+        Color: Color,
+        init: init
+    }
+}();

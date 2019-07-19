@@ -1,0 +1,184 @@
+var BOLD = BOLD || {};
+BOLD.BMS = BOLD.BMS || {};
+
+BOLD.BMS.Common = function() {
+  "use strict";
+
+  function isObjectAvailable(target) {
+    var objects = target.split(".");
+    var current = window;
+    var available = true;
+
+    // If window is the first item, remove it
+    if (objects[0] === "window") objects.shift();
+
+    for (var i = 0; i < objects.length; i++) {
+      if (current[objects[i]]) {
+        current = current[objects[i]];
+      } else {
+        available = false;
+        if (BOLD.DebugMode) console.log("Object not available. Validation failed on '" + objects[i] + "'.");
+      }
+    }
+
+    return available;
+  }
+
+  function getVersion() {
+    return getParamByName("view") || "v1";
+  }
+
+  function checkVersion(view) {
+    var version = getVersion();
+    return version.toLowerCase() === view.toLowerCase();
+  }
+
+  function getParamByName(name, url) {
+    url = url || window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+  }
+
+  function createElement(type, properties, text) {
+    var element = document.createElement(type);
+    var value = "";
+    if (properties) {
+      for (var key in properties) {
+        value = properties[key];
+        // If is an array, join the items with space
+        element.setAttribute(key, Array.isArray(value) ? value.join(" ") : value);
+      }
+    }
+    if (text) {
+      element.innerHTML = text;
+    }
+    return element;
+  }
+
+  function slugify(str) {
+    if (str) {
+      str = str.replace(/^\s+|\s+$/g, ""); // trim
+      str = str.toLowerCase();
+
+      // remove accents, swap ñ for n, etc
+      var from = "åàáãäâèéëêìíïîòóöôùúüûñç·/_,:;.";
+      var to = "aaaaaaeeeeiiiioooouuuunc-------";
+
+      for (var i = 0, l = from.length; i < l; i++) {
+        var char = "\\" + from.charAt(i);
+        str = str.replace(new RegExp(char, "g"), to.charAt(i));
+      }
+
+      str = str
+        .replace(/[^a-z0-9 -]/g, "") // remove invalid chars
+        .replace(/\s+/g, "-") // collapse whitespace and replace by -
+        .replace(/-+/g, "-") // collapse dashes
+        .replace(/^-+/, "") // trim - from start of text
+        .replace(/-+$/, ""); // trim - from end of text    
+    }
+    return str;
+  }
+
+  function limitContent(settings, element) {
+    var maxHeight = settings.maxHeight || 100;
+
+    if (element.clientHeight > maxHeight) {
+      element.dataset.maxHeight = maxHeight;
+
+      element.classList.add("variable-height");
+      element.classList.add("content-hidden");
+
+      element.style.height = maxHeight + "px";
+
+      var toggleContainer = createElement("div", {
+        "class": ["toggle-container"]
+      });
+      var toggle = createElement("div", {
+        "class": ["content-toggle"],
+        "data-more": settings.label.more || "Read more",
+        "data-less": settings.label.less || "Close"
+      });
+
+      toggle.addEventListener("click", function(event) {
+        element.classList.toggle("content-hidden");
+
+        var isHidden = element.classList.contains("content-hidden");
+        var visibleHeight = element.scrollHeight + event.target.clientHeight;
+
+        element.style.height = (isHidden ? maxHeight : visibleHeight) + "px";
+      });
+
+      toggleContainer.appendChild(toggle);
+
+      element.appendChild(toggleContainer);
+    }
+  }
+
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+  function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
+    };
+  };
+
+  function isTouchDevice() {
+    var prefixes = ['', '-webkit-', '-moz-', '-o-', '-ms-'];
+    var mq = function(query) {
+      return window.matchMedia(query).matches;
+    }
+  
+    if (('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
+      return true;
+    }
+  
+    // include the 'heartz' as a way to have a non matching MQ to help terminate the join
+    // https://git.io/vznFH
+    var query = ['(', prefixes.join('touch-enabled),('), 'heartz', ')'].join('');
+    return mq(query);
+  }
+
+  function createTemplateElement(template) {
+    var element = null;
+    
+    var div = document.createElement('div');
+
+    // If createContextualFragment does not exist, fallback to catch
+    try {
+      element = document.createRange().createContextualFragment(template);
+      div.appendChild(element);
+    } catch (e) {
+      div.innerHTML = template.trim();
+    }
+    
+    return div.children[0];
+  }
+
+  return {
+    getVersion: getVersion,
+    getParamByName: getParamByName,
+    checkVersion: checkVersion,
+    createElement: createElement,
+    createTemplateElement: createTemplateElement,
+    isObjectAvailable: isObjectAvailable,
+    limitContent: limitContent,
+    slugify: slugify,
+    debounce: debounce,
+    isTouchDevice: isTouchDevice
+  }
+}()

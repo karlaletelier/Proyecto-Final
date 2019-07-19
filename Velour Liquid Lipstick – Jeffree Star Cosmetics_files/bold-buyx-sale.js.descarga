@@ -1,0 +1,563 @@
+/*
+  BOLD-BUYX-SALE.JS
+
+  Customization developed to allow creation of promotions to give customers free products with qualifying purchases
+
+  REQUIRES:
+  //TODO: Dependency list
+
+
+*/
+
+/* ******************************************************************************************************
+ TEMPLATE DECLARATIONS
+
+ 
+****************************************************************************************************** */
+
+/* ******************************************************************************************************
+  OBJECT DECLARATIONS
+****************************************************************************************************** */
+var BOLD = BOLD || {};
+BOLD.helpers = BOLD.helpers || {};
+BOLD.debugMode = false;
+
+/* ******************************************************************************************************
+  BOLD-BUYX
+****************************************************************************************************** */
+
+BOLD.buyx = {
+
+  validation_template_suffix:"bold-buyx-validation.json",
+  offer_template_suffix:"bold-buyx-offer",
+  offer_modal_title:"RECEIVE A FREE LIPSTICK WITH ANY FASHION OR ACCESSORY PURCHASE!",
+  remaining_selections_template:"\u003cspan class=\"bold-buyx-selections-remaining\"\u003e[count] selections remaining\u003c\/span\u003e",
+  getValidationInfo:function(reason){
+    BOLD.helpers.get('/cart?view=' + BOLD.buyx.validation_template_suffix, function(data){
+      BOLD.helpers.triggerCommonEvent('BOLD_BUYX_validation_loaded', null, {validation:data, reason:(typeof reason === 'string' ? reason : null)})
+    });
+  },
+  decline:function(){
+    //Funciton to remember if the customer declined the buyx offer
+    var decline_date = new Date();
+    if(window.sessionStorage){
+      sessionStorage.setItem('bold_buyx_declined', decline_date.getFullYear() + '-' + (decline_date.getMonth()+1) + '-' + decline_date.getDate());
+    }
+    BOLD.helpers.addToCartQueue('update', { attributes: {'Offer declined':decline_date.toISOString() } })
+  },
+  validateCart:function(cartValidationObj, reason){
+    if(!cartValidationObj || !cartValidationObj.items){
+      BOLD.helpers.triggerCommonEvent('BOLD_BUYX_invalid_validation_object', null, {validation:cartValidationObj, reason:reason})
+      return;
+    }
+
+    //Show the offer if the customer qualifies
+    if(cartValidationObj.show_offers && (reason == 'add' || reason == 'show')){
+      BOLD.buyx.showOffers(cartValidationObj);
+      return;
+    }
+
+
+    //If we have too many offers in the cart, bring the cart quantities back down to what we should have
+    if(cartValidationObj.excess_offers){
+      BOLD.buyx.removeExcessOffers(cartValidationObj, reason);
+      return;
+    }
+    BOLD.helpers.triggerCommonEvent('BOLD_BUYX_validation_passed');
+  },
+  showOffers:function(cartValidationObj){
+    if(!cartValidationObj || !cartValidationObj.offer_collection){
+      return;
+    }
+    // Only display the modal if the customer hasn't already declined the offer today
+    var current_date = new Date();
+    var date_check = current_date.getFullYear() + '-' + (current_date.getMonth()+1) + '-' + current_date.getDate();
+
+    var shouldShowPopup = true;
+    if(window.sessionStorage && sessionStorage.getItem('bold_buyx_declined') && sessionStorage.getItem('bold_buyx_last_qualifying_count') == cartValidationObj.total_qualifying && sessionStorage.getItem('bold_buyx_declined') == date_check){
+      shouldShowPopup = false;
+    }
+    sessionStorage.setItem('bold_buyx_last_qualifying_count', cartValidationObj.total_qualifying);
+
+    if(!shouldShowPopup){
+      return;
+    }
+    sessionStorage.removeItem('bold_buyx_declined');
+
+    BOLD.buyx.items_remaining = cartValidationObj.expected_offers - cartValidationObj.total_offers;
+    BOLD.helpers.get('/collections/' + cartValidationObj.offer_collection + '?view=' + BOLD.buyx.offer_template_suffix, function(displayHTML){
+      remaining_selections_html = BOLD.buyx.remaining_selections_template.split('[count]').join(BOLD.buyx.items_remaining);
+      displayHTML = displayHTML.split('[remaining]').join( (BOLD.buyx.items_remaining > 1  ? remaining_selections_html : '') );
+
+      BOLD.modal.generateModal(BOLD.buyx.offer_modal_title, displayHTML);
+      BOLD.helpers.addToCartQueue('update', {attributes:{'Last Offer Displayed': new Date() }})
+    })
+  },
+  removeExcessOffers:function(cartValidationObj, reason){
+    if(!cartValidationObj || !cartValidationObj.excess_offers){
+      return;
+    }
+    if(location.pathname.indexOf('/checkout') > -1){
+      window.location.href = '/cart';
+      return;
+    }
+
+    if(!reason){
+      BOLD.common.eventEmitter.on('BOLD_BUYX_validation_passed', function(){
+        window.location.reload();
+      });
+    }
+
+    var offers_to_find = cartValidationObj.expected_offers;
+    for(var i=0; i<cartValidationObj.items.length; i++){
+      var item = cartValidationObj.items[i];
+      if(!item.freebie){
+        continue;
+      }
+      if(item.quantity <= offers_to_find){
+        offers_to_find -= item.quantity;
+      } else {
+        var qty_to_remain = offers_to_find;
+        var qty_to_remove = item.quantity - qty_to_remain;
+        offers_to_find = 0;
+
+        BOLD.helpers.addToCartQueue('change', {id: item.key, quantity: qty_to_remain, properties: item.properties }, null, 'BOLD_BUYX_validation_passed');
+        if(cartValidationObj.replace_with_full_price){
+          var properties = item.properties;
+          delete properties._charge;
+          BOLD.helpers.addToCartQueue('add', {id: item.id, properties: properties, quantity:qty_to_remove}, null, 'BOLD_BUYX_validation_passed');
+        }
+
+        // reload page once the queue is done
+        BOLD.common.eventEmitter.on("BOLD_COMMON_cart_queue_finished", function(){
+          window.location.reload();
+        })
+      }
+    }
+  },
+  addSaleItemFromModal:function(form){
+    var submit_data = {attributes:{'Last Offer Accepted': new Date() }};
+    for(var i=0; i<form.length; i++){
+      var input = form[i];
+      if(input.getAttribute('name') && input.value){
+        var name = input.getAttribute('name');
+        if(name.indexOf('[') > -1){
+          var name_arr = name.split('[');
+          submit_data[name_arr[0]] = submit_data[name_arr[0]] || {};
+          submit_data[name_arr[0]][name_arr[1].replace(']','')] = input.value;
+        } else {
+          submit_data[name] = input.value;
+        }
+      }
+    }
+    BOLD.helpers.post('/cart/add.js', submit_data, function(item){
+      BOLD.buyx.items_remaining --;
+      if(BOLD.buyx.items_remaining){
+        BOLD.helpers.get('/collections/' + "accessories" + '?view=' + BOLD.buyx.offer_template_suffix, function(displayHTML){
+          remaining_selections_html = BOLD.buyx.remaining_selections_template.split('[count]').join(BOLD.buyx.items_remaining);
+          displayHTML = displayHTML.split('[remaining]').join( (BOLD.buyx.items_remaining > 1  ? remaining_selections_html : '') );
+          document.querySelector('.bold-modal-body').innerHTML = displayHTML;
+        });
+      }else{
+        BOLD.modal.closeModal();
+      }
+    }, function(err){
+
+      /** Taken from the ella.js file to mimic the existing error modal functionality */
+      if(window.jQuery){
+
+        function showModal(selector){
+          jQuery(selector).fadeIn(500),setTimeout(function () {
+            jQuery(selector).fadeOut(500)
+          }, 5e3)
+        }
+
+        jQuery(".ajax-error-message").text(language.error_modal_message);
+        showModal(".ajax-error-message");
+      }
+    })
+  }
+}
+
+
+/* ******************************************************************************************************
+  BOLD-MODAL
+****************************************************************************************************** */
+BOLD.modal = {
+  template: "\u003cdiv class=\"bold-overlay\" onclick=\"BOLD.modal.closeModal();\"\u003e  \u003c\/div\u003e  \u003cdiv id=\"bold-modal\" class=\"bold-modalwindow\"\u003e    \u003cdiv class=\"bold-modal-content\"\u003e      \u003ch2 class='bold-modal-header'\u003e\u003c\/h2\u003e      \u003cdiv class='bold-modal-body'\u003e\u003c\/div\u003e      \u003ca class=\"bold-modal-close close-modal\" href=\"javascript:void(0)\" onclick=\"BOLD.modal.closeModal();\"\u003e\u003c\/a\u003e      \u003ca class=\"bold-modal-decline\" href=\"javascript:void(0)\" onclick=\"BOLD.buyx.decline();BOLD.modal.closeModal();\"\u003eDecline Offer\u003c\/a\u003e    \u003c\/div\u003e  \u003c\/div\u003e",
+
+  /* General functionality */
+  generateModal: function(heading, body, closure, auto_open){
+    if(typeof auto_open == 'undefined'){
+      auto_open = true;
+    }
+    var modalContainer = document.querySelector('.bold-modal-container');
+    if(!modalContainer){
+      modalContainer = document.createElement('div');
+      modalContainer.className = 'bold-modal-container';
+      document.body.appendChild(modalContainer);
+    }
+    modalContainer.innerHTML = BOLD.modal.template;
+    modalContainer.querySelector('.bold-modal-header').innerHTML = heading;
+    modalContainer.querySelector('.bold-modal-body').innerHTML = body;
+    modalContainer.querySelector('.bold-modal-close').innerHTML = closure || 'x';
+
+    BOLD.helpers.triggerCommonEvent('BOLD_MODAL_generated', {heading:heading, container:modalContainer, body:body, closure:closure, auto_open:auto_open});
+    if(auto_open){
+      BOLD.modal.openModal(modalContainer);
+    }
+  },
+  openModal: function(container, duration){
+    if(typeof duration != 'number'){
+      duration = 0.33;
+    }
+    container = container || document.querySelector('.bold-modal-container');
+    if(!container){
+      return;
+    }
+    container.style.animationName = 'boldModalFadeIn';
+    container.style.animationDuration = duration + 's';
+    container.style.display='block';
+
+    BOLD.helpers.triggerCommonEvent('BOLD_MODAL_opened', {container:container, animation_duration:duration});
+  },
+  closeModal: function(container, duration){
+    if(typeof duration != 'number'){
+      duration = 0.33;
+    }
+    container = container || document.querySelector('.bold-modal-container');
+    if(!container){
+      return;
+    }
+    container.style.animationName = 'boldModalFadeOut';
+    container.style.animationDuration = duration + 's';
+
+    //Set display to none shortly before the modal completely disappears (to avoid any blips)
+    setTimeout(function(){
+      container.style.display = 'none';
+    }, Math.max(0,(duration * 1000) - 100));
+
+    BOLD.helpers.triggerCommonEvent('BOLD_MODAL_closed', {container:container, animation_duration:duration});
+  }
+}
+
+/* ******************************************************************************************************
+  MISC HELPER FUNCTIONS
+****************************************************************************************************** */
+
+BOLD.helpers.formatMoney = function(e, t) {
+    function n(e, t) {
+        return "undefined" == typeof e ? t : e
+    }
+    function r(e, t, r, i) {
+        if (t = n(t, 2),
+        r = n(r, ","),
+        i = n(i, "."),
+        isNaN(e) || null == e)
+            return 0;
+        e = (e / 100).toFixed(t);
+        var o = e.split(".")
+          , a = o[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + r)
+          , s = o[1] ? i + o[1] : "";
+        return a + s
+    }
+    "string" == typeof e && (e = e.replace(".", ""));
+    var i = ""
+      , o = /\{\{\s*(\w+)\s*\}\}/
+      , a = t || BOLD.money_format || (Shopify && Shopify.money_format ? Shopify.money_format : '${{amount}}');
+    switch (a.match(o)[1]) {
+    case "amount":
+        i = r(e, 2);
+        break;
+    case "amount_no_decimals":
+        i = r(e, 0);
+        break;
+    case "amount_with_comma_separator":
+        i = r(e, 2, ".", ",");
+        break;
+    case "amount_with_space_separator":
+        i = r(e, 2, " ", ",");
+        break;
+    case "amount_with_period_and_space_separator":
+        i = r(e, 2, " ", ".");
+        break;
+    case "amount_no_decimals_with_comma_separator":
+        i = r(e, 0, ".", ",");
+        break;
+    case "amount_no_decimals_with_space_separator":
+        i = r(e, 0, " ");
+        break;
+    case "amount_with_apostrophe_separator":
+        i = r(e, 2, "'", ".")
+    }
+    return a.replace(o, i)
+}
+BOLD.helpers.triggerCommonEvent = function(bold_event_name, original_event, additional_data){
+  if(window.BOLD && BOLD.common && BOLD.common.eventEmitter){
+    //Prefix 'BOLD_COMMON' scope if no (BOLD) scope is provided
+    bold_event_name = (bold_event_name.indexOf('BOLD_') > -1 ? bold_event_name : 'BOLD_COMMON_' + bold_event_name);
+    var eventData = {};
+    if(original_event){
+      eventData.original_event=original_event;
+      if(original_event.target){
+        eventData.target=original_event.target;
+      }
+    }
+    if(additional_data){
+      eventData.data = additional_data;
+    }
+
+    BOLD.common = BOLD.common || {};
+    BOLD.common.settings = BOLD.common.settings || {};
+
+    if(window.console && (BOLD.common.settings.log_events || BOLD.common.settings.log_event_data || BOLD.debugMode)){
+      console.log(bold_event_name, (BOLD.common.settings.log_event_data || BOLD.debugMode ? eventData : undefined));
+    }
+    BOLD.common.eventEmitter.emit(bold_event_name, eventData);
+  }
+};
+BOLD.helpers.addToCartQueue = function(type, data, success_event, final_event){
+  if(!type || !(type == 'add' || type == 'change' || type == 'update')){
+    return;
+  }
+  BOLD.helpers.cart_queue = BOLD.helpers.cart_queue || [];
+  BOLD.helpers.cart_queue.push({
+    type:type,
+    data:data,
+    success_event:success_event
+  });
+  BOLD.helpers.cart_queue_on_finish = BOLD.helpers.cart_queue_on_finish || [];
+  if(BOLD.helpers.cart_queue_on_finish.indexOf(final_event) === -1){
+    BOLD.helpers.cart_queue_on_finish.push(final_event);
+  }
+
+  BOLD.helpers.triggerCommonEvent('cart_queue_active');
+};
+BOLD.helpers.runCartQueue = function(){
+  var queue = BOLD.helpers.cart_queue;
+  if(BOLD.helpers.queue_running || !queue || !queue[0]){
+    if(!queue.length){
+      for(var e=0; e < BOLD.helpers.cart_queue_on_finish.length; e++){
+        BOLD.helpers.triggerCommonEvent(BOLD.helpers.cart_queue_on_finish[e]);
+      }
+      delete BOLD.helpers.cart_queue_on_finish;
+      BOLD.helpers.triggerCommonEvent('cart_queue_finished')
+    }
+    return;
+  }
+  BOLD.helpers.queue_running = true;
+  var command = queue.splice(0,1)[0];
+
+  var url = '/cart/' + command.type + '.js';
+  BOLD.helpers.post(url, command.data, function(response){
+    BOLD.helpers.queue_running = false;
+    BOLD.helpers.updateCartQueue(command, response);
+    BOLD.helpers.triggerCommonEvent('cart_queue_success', null, {command:command, response:response});
+    BOLD.helpers.triggerCommonEvent('cart_queue_active');
+  },function(err){
+    BOLD.helpers.queue_running = false;
+    BOLD.helpers.triggerCommonEvent('cart_queue_error', null, {command:command, error:err});
+    BOLD.helpers.triggerCommonEvent('cart_queue_active');
+  })
+};
+BOLD.helpers.updateCartQueue = function(command, response){
+  if(!command || !response || !BOLD.helpers.cart_queue.length){
+    return;
+  }
+
+  if(command.type == 'add' && (response.quantity == 1 || response.quantity == command.data.quantity)){
+    // An item was added at the top of the cart. Update all remaining references to line numbers in the queue to be 1 higher.
+    for(var q=0; q<BOLD.helpers.cart_queue.length; q++){
+      var upcoming_command = BOLD.helpers.cart_queue[q];
+      if(upcoming_command.data.line){
+        upcoming_command.data.line ++;
+      }
+      else if(upcoming_command.data.updates){
+        upcoming_command.data.updates = [response.quantity].concat(upcoming_command.data.updates);
+      }
+    }
+    return;
+  }
+
+  if(command.type == 'change' && command.data.line && command.data.quantity == 0){
+    //An item was removed from the cart. Find any commands referencing lines further down and reduce their line numbers by 1
+    for(var q=0; q<BOLD.helpers.cart_queue.length; q++){
+      var upcoming_command = BOLD.helpers.cart_queue[q];
+      BOLD.helpers.updateCartQueueEntryOnItemRemoval(upcoming_command, command.data.line);
+    }
+    return;
+  }
+
+  if(command.type == 'update' && command.data.updates && command.data.updates.indexOf(0) > -1){
+    //At least 1 item was removed from the cart. Find any lines further down and reduce their line numbers appropriately.
+    for(var u=0; u<command.data.updates.length; u++){
+      if(command.data.updates[u] == 0){
+        for(var q=0; q<BOLD.helpers.cart_queue.length; q++){
+          var upcoming_command = BOLD.helpers.cart_queue[q];
+          BOLD.helpers.updateCartQueueEntryOnItemRemoval(upcoming_command, u + 1);  //Shopify uses 1-based indexing
+        }
+      }
+    }
+    return;
+  }
+}
+BOLD.helpers.updateCartQueueEntryOnItemRemoval = function(queue_command, line_removed){
+  if(!queue_command || !line_removed || typeof line_removed !== 'number'){
+    return;
+  }
+  if(queue_command.data.line > line_removed){
+    queue_command.data.line --;
+  }
+  else if(queue_command.data.updates){
+    upcoming_command.data.updates.splice(line_removed, 1);
+  }
+}
+BOLD.helpers.get = function(url, success_callback, error_callback){
+  var request = new XMLHttpRequest();
+  request.open('GET', url, true);
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 400) {
+      // Success!
+      var response;
+      try {
+        response = JSON.parse(request.responseText);
+      } catch (e) {
+        response = request.responseText;
+      } finally {
+        if(typeof success_callback === 'function'){
+          success_callback(response)
+        }
+      }
+    } else {
+      // We reached our target server, but it returned an error
+      if(typeof error_callback === 'function'){
+        error_callback(request.responseText);
+      }
+    }
+  };
+  request.send();
+};
+BOLD.helpers.post = function(url, data, success_callback, error_callback){
+  var request = new XMLHttpRequest();
+  request.open('POST', url, true);
+  request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 400) {
+      // Success!
+      var response;
+      try {
+        response = JSON.parse(request.responseText);
+      } catch (e) {
+        response = request.responseText;
+      } finally {
+        if(typeof success_callback === 'function'){
+          success_callback(response)
+        }
+      }
+    } else {
+      // We reached our target server, but it returned an error
+      if(typeof error_callback === 'function'){
+        error_callback(request.responseText);
+      }
+    }
+  };
+  request.send(typeof data === 'object' ? JSON.stringify(data) : data);
+};
+BOLD.helpers.ajaxSubmitForm = function(form, success_callback, error_callback){
+    var submit_data = {};
+    for(var i=0; i<form.length; i++){
+      var input = form[i];
+      if(input.getAttribute('name') && input.value && input.getAttribute('type') !== 'submit' && input.tagName !== 'BUTTON' && ((input.getAttribute('type') !== 'radio' && input.getAttribute('type') !== 'checkbox') || input.checked)){
+        var name = input.getAttribute('name');
+        if(name.indexOf('[]') > -1){
+          name = name.replace('[]', '');
+          submit_data[name] = submit_data[name] || [];
+          submit_data[name].push(input.value);
+        }
+        else if(name.indexOf('[') > -1){
+          var name_arr = name.split('[');
+          submit_data[name_arr[0]] = submit_data[name_arr[0]] || {};
+          submit_data[name_arr[0]][name_arr[1].replace(']','')] = input.value;
+        } else {
+          submit_data[name] = input.value;
+        }
+      }
+    }
+    var action = form.getAttribute('action');
+    if(action.indexOf('cart') > -1 && action.indexOf('.js') === -1){
+      var action_split = action.split('?');
+      action_split[0] = action_split[0] + (submit_data.updates ? '/update' : '') + '.js';
+      action = action_split.join('?')
+    }
+    BOLD.helpers.post(action, submit_data, success_callback, error_callback);
+
+}
+/* ******************************************************************************************************
+  POLYFILL FOR OLDER BROWSERS
+****************************************************************************************************** */
+//Element.matches() - Courtesy of https://developer.mozilla.org/en/docs/Web/API/Element/matches
+if (!Element.prototype.matches) {
+    Element.prototype.matches =
+        Element.prototype.matchesSelector ||
+        Element.prototype.mozMatchesSelector ||
+        Element.prototype.msMatchesSelector ||
+        Element.prototype.oMatchesSelector ||
+        Element.prototype.webkitMatchesSelector ||
+        function(s) {
+            var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+                i = matches.length;
+            while (--i >= 0 && matches.item(i) !== this) {}
+            return i > -1;
+        };
+}
+
+
+/* ******************************************************************************************************
+  EVENT SETUP
+****************************************************************************************************** */
+
+document.addEventListener('DOMContentLoaded', BOLD.buyx.getValidationInfo);
+document.addEventListener('click', function(evt){
+  if(evt.target && evt.target.getAttribute('name') === 'checkout' && evt.target.form){
+    var form = evt.target.form;
+    evt.preventDefault();
+    BOLD.common.eventEmitter.on('BOLD_BUYX_validation_passed', function(){
+      var checkoutElement = document.createElement('input');
+      checkoutElement.setAttribute('type', 'hidden');
+      checkoutElement.setAttribute('name', 'checkout');
+      checkoutElement.value = 'checkout';
+      form.appendChild(checkoutElement);
+      form.submit();
+    });
+    BOLD.buyx.getValidationInfo();
+  }
+});
+document.addEventListener('submit', function(evt){
+  if(evt.target && evt.target.matches && evt.target.matches('.bold-modal-content [action^="/cart/add"]')){
+    evt.preventDefault();
+    BOLD.buyx.addSaleItemFromModal(evt.target);
+  }
+});
+document.addEventListener('change', function(evt){
+  if(evt.target && evt.target.form && evt.target.matches && evt.target.matches('[name^="updates"]')){
+    BOLD.helpers.ajaxSubmitForm(evt.target.form, function(){ BOLD.buyx.getValidationInfo('show') });
+  }
+})
+
+BOLD.common.eventEmitter.on('BOLD_BUYX_validation_loaded', function(a){
+  if(!a || !a.data){
+    return;
+  }
+  BOLD.buyx.validateCart(a.data.validation, a.data.reason);
+});
+
+BOLD.common.eventEmitter.on('BOLD_COMMON_cart_queue_active', function(){
+  BOLD.helpers.runCartQueue();
+})
+
+if(location.pathname === '/cart'){
+  BOLD.buyx.getValidationInfo('show');
+  BOLD.common.eventEmitter.on('BOLD_MODAL_closed', function(){
+    window.location.reload();
+  });
+}

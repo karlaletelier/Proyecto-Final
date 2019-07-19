@@ -1,0 +1,4 @@
+var dynamicYield={callEvent:function(eventName,params){var DYhref='',DYform='';if(typeof params=="object"){DYhref=params.DYhref||'';DYform=params.DYform||'';}
+var params=JSON.stringify(params)||'';$.ajax({url:Urls.DYGetAPIProperties,data:{eventName:eventName,params:params}}).success(function(response){if(response.doCall){DY.API('event',{name:response.eventName,properties:response.properties});}
+if(DYhref!=''){window.location.href=DYhref;}
+if(DYform!=''){DYform.trigger('submit');}}).error(function(e){console.log(e);});}}

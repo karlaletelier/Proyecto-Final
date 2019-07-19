@@ -1,0 +1,1 @@
+if (window.queueit && window.queueit['fentybeauty'] && window.queueit['fentybeauty']['sitequeue']) { window.queueit['fentybeauty']['sitequeue'].enqueue({"inQueue":true,"redirect":false,"cookieValue":"EventId=sitequeue&QueueId=00000000-0000-0000-0000-000000000000&RedirectType=disabled&IssueTime=1563469097&Hash=493d3acb22c0b9170e1757e269a02bc10051d853f7a310551125b95713e736e5"}); }

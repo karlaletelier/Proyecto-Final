@@ -1,0 +1,92 @@
+var BOLD = BOLD || {};
+BOLD.BMS = BOLD.BMS || {};
+BOLD.BMS.JSC = BOLD.BMS.JSC || {};
+
+BOLD.BMS.JSC.Theme = function() {
+
+  var settings = {};
+
+  function init(data, options) {
+    data = data || {};
+
+    $.extend(true, settings, options);
+
+    bindEvents();
+
+    Geolocation.init(data.geolocation);
+  }
+
+  function bindEvents() {
+  }
+
+  var Geolocation = function() {
+    var _config = null;
+    var _geoIp = null;
+
+    function init(config) {
+      _config = config;
+
+      if (_config.isEnabled) {
+        bindEvents();
+        checkLocation();
+      }
+    }
+
+    function bindEvents() {
+      $(document)
+        .on("click", ".geolocation-modal .stay", function() {
+          var $current = $.featherlight.current();
+          BOLD.BMS.Geolocation.Storage.isDisabled = true;
+          $current.close();
+        })
+        .on("click", ".geolocation-modal .redirect", function() {
+          var url = this.closest(".geolocation-modal").dataset.redirectUrl;
+          if (url) location.href = url;
+        }
+      );
+    }
+
+    function checkLocation() {
+      if(!BOLD.BMS.Geolocation.Storage.isDisabled) {
+        var originCountryCode = 'US';  //This needs to be SET FOR THE WEBSITES SPECIFIC COUNTRY!!
+
+        var redirects = [
+          {
+            country_code: "BR",
+            country_name: "Brazil",
+            redirect_url: "https://jsc-sa1.myshopify.com",
+            force_redirect: true
+          }
+        ];
+
+        var options = {
+          callback: _config.manualRedirect ? displayModal : null
+        };
+
+        _geoIp = new BOLD.BMS.Geolocation.ajaxfreeGeoIp(redirects, originCountryCode, options);
+      }
+    }
+
+    function displayModal(payload, redirect) {
+      var template = BOLD.BMS.Common.createTemplateElement(document.getElementById("geolocation-modal-template").innerText);
+
+      // Replace any occurency of {{ country }} with the target country
+      template.querySelectorAll(".title, .description, .stay, .redirect").forEach(function(element) {
+        element.textContent = element.textContent.replace(/{{\scountry\s}}/gi, payload.country_name);
+      });
+
+      template.setAttribute("data-redirect-url", redirect.redirect_url);
+
+      $.featherlight($(template));
+    }
+
+    return {
+      init: init
+    }
+  }();
+
+  return {
+    init: init
+  };
+
+}(BOLD.jQuery || jQuery);

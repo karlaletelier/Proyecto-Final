@@ -1,0 +1,211 @@
+;PRODUCT;TIPO;PRICE
+1;       Under the Sea Lip Blushes + High Gloss     ;Bundles;40
+2;       Under the Sea Lipsticks     ;Bundles;45
+3;       Beach Bum | Matte Lipstick     ;Matte Lipstick;17
+4;       Paradise Please | Matte Lipstick     ;Matte Lipstick;17
+5;       Endless Summer | Metallic Lipstick     ;Metals;16
+6;       Boss Bay | Lip Blush     ;Lip Blush;16
+7;       Bikini Bod | Lip Blush     ;Lip Blush;16
+8;       You Are the Sun | High Gloss     ;Gloss;16
+9;       Handbag Ho | Lip Liner     ;Lip Liner;12
+10;       Allergic to Bullsh*t | Matte Liquid Lipstick     ;Liquid Lipstick;17
+11;       The Bigger the Hoops | Matte Liquid Lipstick     ;Liquid Lipstick;17
+12;       Posie K | Velvet Lip Kit     ;Lip Kits;27
+13;       Bare | Matte Lip Kit     ;Lip Kits;29
+14;       Snow Way Bae | Matte Lip Kit     ;Lip Kits;29
+15;       Better Not Pout | Matte Lip Kit     ;Lip Kits;29
+16;       Sweater Weather | Matte Lip Kit     ;Lip Kits;29
+17;       Mind Ya Business | Velvet Lip Kit     ;Lip Kits;27
+18;       Bad Lil Thing | Matte Lip Kit     ;Lip Kits;29
+19;       Extraordinary | Matte Lip Kit     ;Lip Kits;29
+20;       5 High Gloss Bundle     ;High Gloss;66
+21;       Crystal | High Gloss     ;High Gloss;16
+22;       I'm the Catch | High Gloss     ;High Gloss;16
+23;       Slept On | High Gloss     ;High Gloss;16
+24;       Lost Angel | High Gloss     ;High Gloss;16
+25;       My Moon & Stars | High Gloss     ;High Gloss;16
+26;       Valentine | Matte Lip Kit     ;Lip Kits;29
+27;       Bite Me | Matte Lip Kit     ;Lip Kits;29
+28;       Nude Lip Liner Set     ;Lip Liner;NA
+29;       Nude Matte Lipstick Set     ;Matte Lipstick;NA
+30;       Nude Lipstick + Liner Set     ;Matte Lipstick;NA
+31;       Dirty Rose | Lip Liner     ;Lip Liner;12
+32;       Soufflé | Lip Liner     ;Lip Liner;12
+33;       Hot Chai | Lip Liner     ;Lip Liner;12
+34;       Almost Friday | Matte Lipstick     ;Matte Lipstick;17
+35;       Yes Baby | Matte Lipstick     ;Matte Lipstick;17
+36;       Complete High Gloss Bundle     ;High Gloss;120
+37;       Lovey Dovey | Matte Lipstick     ;Matte Lipstick;17
+38;       Naughty Is The New Nice | Metal Lip Kit     ;Lip Kits;28
+39;       In With The New | Metal Lip Kit     ;Lip Kits;28
+40;       Midnight Kiss | Metal Lip Kit     ;Lip Kits;28
+41;       INFATUATION + PUPPY LOVE + POMEGRANATE LIPSTICK     ;Lipstick;40
+42;       CUPID GLOSS + HEAD OVER HEELS MATTE SINGLE     ;Bundles;NA
+43;       KKW X KYLIE Lip Set     ;Bundles;42
+44;       Stay Cozy | Metallic Lipstick     ;Lipstick;17
+45;       Holiday 4 Piece Lip Set     ;Bundles;42
+46;       Kylie’s Coconut + Yesss Girl High Gloss Combo     ;Lip Kits;28
+47;       High Gloss Bundle     ;High Gloss;100
+48;       Always Shining | High Gloss     ;High Gloss;16
+49;       Yesss Girl | High Gloss     ;High Gloss;16
+50;       Daddy's Girl | High Gloss     ;High Gloss;16
+51;       Snatched | High Gloss     ;High Gloss;16
+52;       Diva | High Gloss     ;High Gloss;16
+53;       Oh You Fancy? | High Gloss     ;High Gloss;16
+54;       Klear | High Gloss     ;High Gloss;16
+55;       Todd Kraines | Velvet Lip Kit     ;Lip Kits;27
+56;       Kylie | Matte Lip Kit     ;Lip Kits;29
+57;       Queen | Matte Lip Kit     ;Lip Kits;29
+58;       2014 | Matte Lip Kit     ;Lip Kits;29
+59;       No Sleep | Matte Lip Kit     ;Lip Kits;29
+60;       Creep It Real | Matte Lipstick     ;Lipstick;17
+61;       23 | High Gloss     ;High Gloss;16
+62;       Kylie's Coconut + Bare Lip Kit Combo     ;Lip Kits;39
+63;       Flirtini | Matte Lipstick     ;Matte Lipstick;17
+64;       Birthday Behavior | Matte Lipstick     ;Matte Lipstick;17
+65;       Twenty | Matte Liquid Lipstick     ;Liquid Lipstick;17
+66;       Clove | Matte Liquid Lipstick     ;Liquid Lipstick;17
+67;       22 | Matte Liquid Lipstick     ;Liquid Lipstick;17
+68;       Bare | Matte Liquid Lipstick     ;Liquid Lipstick;17
+69;       Nova | Matte Lipstick     ;Matte Lipstick;17
+70;       Boss | Matte Lipstick     ;Matte Lipstick;17
+71;       Miami | Matte Lipstick     ;Matte Lipstick;17
+72;       Vacay | Matte Lipstick     ;Matte Lipstick;17
+73;       Tangerine | Matte Lipstick     ;Matte Lipstick;17
+74;       Candy K | Velvet Lip Kit     ;Lip Kits;27
+75;       On Wednesdays | Matte Lip Kit     ;Lip Kits;29
+76;       Sorta Sweet Trio | Lip Set     ;Liquid Lipstick;NA
+77;       Juniper | Gloss     ;Gloss;15
+78;       Charm | Velvet Lipstick     ;Liquid Lipstick;16
+79;       Dazzle | Velvet Lipstick     ;Liquid Lipstick;16
+80;       Angel | Matte Liquid Lipstick     ;Liquid Lipstick;17
+81;       One Wish | Matte Liquid Lipstick     ;Liquid Lipstick;17
+82;       Victoria | Matte Lip Kit     ;Lip Kits;29
+83;       Red Velvet | Velvet Lip Kit     ;Lip Kits;27
+84;       Caramel | Lip Liner     ;Lip Liner;12
+85;       Iced Latte | Lip Liner     ;Lip Liner;12
+86;       Coconut | Lip Liner     ;Lip Liner;12
+87;       22 | Lip Liner     ;Lip Liner;12
+88;       Dazzle | Lip Liner     ;Lip Liner;12
+89;       Apricot | Matte Liquid Lipstick     ;Liquid Lipstick;17
+90;       Head Over Heels | Matte Liquid Lipstick     ;Liquid Lipstick;17
+91;       High Maintenance | Matte Liquid Lipstick     ;Liquid Lipstick;17
+92;       Libra | Matte Liquid Lipstick     ;Liquid Lipstick;17
+93;       Give Me a Kiss | Crème Lipstick     ;Lipstick;17
+94;       Give Me a Kiss | Lip Liner     ;Lip Liner;12
+95;       Kris | Mini Lip Set     ;Bundles;42
+96;       Show Off | Matte Lip Kit     ;Lip Kits;29
+97;       Shady | Matte Lip Kit     ;Lip Kits;29
+98;       One Wish | Matte Lip Kit     ;Lip Kits;29
+99;       Party Girl | Velvet Lip Kit     ;Lip Kits;27
+100;       June Bug | Matte Lip Kit     ;Lip Kits;29
+101;       FRENCH KISS | Velvet Lipstick     ;Liquid Lipstick;16
+102;       MINNIE | Velvet Lipstick     ;Liquid Lipstick;16
+103;       RAD | Velvet Lipstick     ;Liquid Lipstick;16
+104;       Hazel | Matte Liquid Lipstick     ;Liquid Lipstick;17
+105;       Autumn | Matte Liquid Lipstick     ;Liquid Lipstick;17
+106;       Boujee | Matte Liquid Lipstick     ;Liquid Lipstick;17
+107;       Commando | Matte Liquid Lipstick     ;Liquid Lipstick;17
+108;       Bare | Velvet Lip Kit     ;Lip Kits;27
+109;       Say No More | Velvet Lip Kit     ;Lip Kits;27
+110;       Ironic | Lip Kit     ;Lip Kits;29
+111;       Boss | Lip Kit     ;Lip Kits;29
+112;       OG Trio | Lip Set     ;Liquid Lipstick;NA
+113;       Angel | Lip Kit     ;Lip Kits;29
+114;       Cinnamon | Gloss     ;Gloss;15
+115;       Hollyberry | Lip Kit     ;Lip Kits;29
+116;       Crème Lipstick Bundle     ;Lipstick;290
+117;       Clove | Lip Kit     ;Lip Kits;29
+118;       Twenty | Lip Kit     ;Lip Kits;29
+119;       Posie K | Velvet Lipstick     ;Liquid Lipstick;16
+120;       Glamour | Super Glitter Gloss     ;Gloss;15
+121;       Glitz | Super Glitter Gloss     ;Gloss;15
+122;       Cosmic | Matte Lipstick     ;Matte Lipstick;17
+123;       Posie K Trio | Lip Set     ;Liquid Lipstick;NA
+124;       Mood | Velvet Lipstick     ;Liquid Lipstick;16
+125;       Shook | Velvet Lipstick     ;Liquid Lipstick;16
+126;       Vibe | Velvet Lipstick     ;Liquid Lipstick;16
+127;       Heat | Velvet Lipstick     ;Liquid Lipstick;16
+128;       Crème Lipsticks     ;16 shades;17
+129;       Brat | Velvet Lipstick     ;Liquid Lipstick;16
+130;       Punk | Velvet Lipstick     ;Liquid Lipstick;16
+131;       Basic | Velvet Lipstick     ;Liquid Lipstick;16
+132;       Low Key | Velvet Lipstick     ;Liquid Lipstick;16
+133;       Savage | Velvet Lipstick     ;Liquid Lipstick;16
+134;       Boy Bye | Velvet Lipstick     ;Liquid Lipstick;16
+135;       Karma | Velvet Lipstick     ;Liquid Lipstick;16
+136;       Goals | Velvet Lipstick     ;Liquid Lipstick;16
+137;       Surprise Me | Velvet Lipstick     ;Liquid Lipstick;16
+138;       Birthday Suit | Velvet Liquid Lipstick     ;Liquid Lipstick;16
+139;       Commando | Velvet Lipstick     ;Liquid Lipstick;16
+140;       Autumn | Lip Kit     ;Lip Kits;29
+141;       Baby Girl | Matte Liquid Lipstick     ;Liquid Lipstick;17
+142;       Doll | Matte Liquid Lipstick     ;Liquid Lipstick;17
+143;       Bunny | Matte Liquid Lipstick     ;Liquid Lipstick;17
+144;       Sugar Plum | Gloss     ;Gloss;15
+145;       Poppin' | Gloss     ;Gloss;15
+146;       Cupid | Gloss     ;Gloss;15
+147;       Jolly | Gloss     ;Gloss;15
+148;       Leo | Matte Liquid Lipstick     ;Liquid Lipstick;17
+149;       Leo | Lip Liner     ;Lip Liner;12
+150;       Cupcake | Gloss     ;Gloss;15
+151;       In Love With The Koko     ;Liquid Lipstick;40
+152;       Grape Soda | Velvet Lip Kit     ;Lip Kits;29
+153;       KKW Crème Liquid Lipstick     ;KKW;45
+154;       High Maintenance | Lip Kit     ;Lip Kits;29
+155;       Boujee | Lip Kit     ;Lip Kits;29
+156;       Rosie | Velvet Lip Kit     ;Lip Kits;27
+157;       Harmony | Velvet Lip Kit     ;Lip Kits;27
+158;       Charm | Velvet Lip Kit     ;Lip Kits;27
+159;       Damn Gina | Gloss     ;Gloss;15
+160;       Khlo$ | Matte Liquid Lipstick     ;Liquid Lipstick;17
+161;       Okurrr | Matte Liquid Lipstick     ;Liquid Lipstick;17
+162;       Gorg | Matte Liquid Lipstick     ;Liquid Lipstick;17
+163;       Head Over Heels | Lip Kit     ;Lip Kits;29
+164;       Koko Kollection Original Lip Set: Gorg, Khlo$, Okurrr + Damn Gina     ;Bundles;40
+165;       Pumpkin | Lip Kit     ;Lip Kits;29
+166;       Moon | Lip Kit     ;Lip Kits;29
+167;       Maliboo | Matte Liquid Lipstick     ;Liquid Lipstick;17
+168;       Love Bite | Matte Liquid Lipstick     ;Liquid Lipstick;17
+169;       Kristen | Matte Liquid Lipstick     ;Liquid Lipstick;17
+170;       Ginger | Matte Liquid Lipstick     ;Liquid Lipstick;17
+171;       Dirty Peach | Matte Liquid Lipstick     ;Liquid Lipstick;17
+172;       Brown Sugar | Matte Liquid Lipstick     ;Liquid Lipstick;17
+173;       Maliboo | Lip Liner     ;Lip Liner;12
+174;       Love Bite | Lip Liner     ;Lip Liner;12
+175;       Kristen | Lip Liner     ;Lip Liner;12
+176;       Dirty Peach | Lip Liner     ;Lip Liner;12
+177;       Brown Sugar | Lip Liner     ;Lip Liner;12
+178;       Leo | Lip Kit     ;Lip Kits;29
+179;       Brown Sugar | Lip Kit     ;Lip Kits;29
+180;       Love Bite | Lip Kit     ;Lip Kits;29
+181;       Dirty Peach | Lip Kit     ;Lip Kits;29
+182;       Ginger | Lip Kit     ;Lip Kits;29
+183;       Kristen | Lip Kit     ;Lip Kits;29
+184;       Maliboo | Lip Kit     ;Lip Kits;29
+185;       Posie K | Matte Liquid Lipstick     ;Liquid Lipstick;17
+186;       Koko K | Matte Liquid Lipstick     ;Liquid Lipstick;17
+187;       Posie K | Lip Liner     ;Lip Liner;12
+188;       Koko K | Lip Liner     ;Lip Liner;12
+189;       Posie K | Gloss     ;Gloss;15
+190;       Candy K | Gloss     ;Gloss;15
+191;       Koko K | Gloss     ;Gloss;15
+192;       Mary Jo K | Lip Kit     ;Lip Kits;29
+193;       Mary Jo K | Lip Liner     ;Lip Liner;12
+194;       Dolce K | Lip Liner     ;Lip Liner;12
+195;       Dolce K | Matte Liquid Lipstick     ;Liquid Lipstick;17
+196;       True Brown K | Matte Liquid Lipstick     ;Liquid Lipstick;17
+197;       Candy K | Matte Liquid Lipstick     ;Liquid Lipstick;17
+198;       Candy K | Lip Liner     ;Lip Liner;12
+199;       Mary Jo K | Matte Liquid Lipstick     ;Liquid Lipstick;17
+200;       Exposed | Lip Kit     ;Lip Kits;29
+201;       King K | Metal     ;Metals;18
+202;       So Cute | Gloss     ;Gloss;15
+203;       Literally | Gloss     ;Gloss;15
+204;       Like | Gloss     ;Gloss;15
+205;       22 | Lip Kit     ;Lip Kits;29
+206;       Koko K | Lip Kit     ;Lip Kits;29
+207;       Posie K | Lip Kit     ;Lip Kits;29
+208;       True Brown K | Lip Kit     ;Lip Kits;29
+209;       Candy K | Lip Kit     ;Lip Kits;29
+210;       Dolce K | Lip Kit     ;Lip Kits;29

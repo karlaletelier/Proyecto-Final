@@ -1,0 +1,28 @@
+(function() {
+  var __sections__ = {};
+  (function() {
+    for(var i = 0, s = document.getElementById('sections-script').getAttribute('data-sections').split(','); i < s.length; i++)
+      __sections__[s[i]] = true;
+  })();
+  (function() {
+  if (!__sections__["article-video"]) return;
+  try {
+    
+  $(document).ready(function() {
+    $(".videoarticle__carousel").owlCarousel({
+      itemsCustom : [      
+        [0, 1],
+        [501,3],
+        [981, 1]
+      ],
+      lazyLoad : true,
+      navigation : true,
+      navigationText: ["",""],
+      pagination: true
+    });
+  });
+
+  } catch(e) { console.error(e); }
+})();
+
+})();

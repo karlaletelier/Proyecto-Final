@@ -1,0 +1,320 @@
+"use strict";
+var BOLD = BOLD || {};
+BOLD.BMS = BOLD.BMS || {};
+BOLD.BMS.Geolocation = BOLD.BMS.Geolocation || {};
+
+
+/* ************************************************************************************************************************
+    MISC HELPER FUNCTIONS
+   ************************************************************************************************************************ */
+
+BOLD.helpers = BOLD.helpers || {};
+BOLD.helpers.get = function(url, success_callback, error_callback){
+  var request = new XMLHttpRequest();
+  request.open('GET', url, true);
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 400) {
+      // Success!
+      var response;
+      try {
+        response = JSON.parse(request.responseText);
+      } catch (e) {
+        response = request.responseText;
+      } finally {
+        if(typeof success_callback === 'function'){
+          success_callback(response)
+        }
+      }
+    } else {
+      // We reached our target server, but it returned an error
+      if(typeof error_callback === 'function'){
+        error_callback(request.responseText);
+      }
+    }
+  };
+  request.send();
+};
+BOLD.helpers.post = function(url, data, success_callback, error_callback){
+  var request = new XMLHttpRequest();
+  request.open('POST', url, true);
+  typeof data === 'object' && !(data instanceof FormData) && request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 400) {
+      // Success!
+      var response;
+      try {
+        response = JSON.parse(request.responseText);
+      } catch (e) {
+        response = request.responseText;
+      } finally {
+        if(typeof success_callback === 'function'){
+          success_callback(response)
+        }
+      }
+    } else {
+      // We reached our target server, but it returned an error
+      if(typeof error_callback === 'function'){
+        error_callback(request.responseText);
+      }
+    }
+  };
+  request.send(typeof data === 'object' && !(data instanceof FormData) ? JSON.stringify(data) : data);
+};
+BOLD.helpers.getAllUrlParams = function(url) {
+  // get query string from url (optional) or window
+  var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
+
+  // we'll store the parameters here
+  var obj = {};
+
+  // if query string exists
+  if (queryString) {
+
+    // stuff after # is not part of query string, so get rid of it
+    queryString = queryString.split('#')[0];
+
+    // split our query string into its component parts
+    var arr = queryString.split('&');
+
+    for (var i=0; i<arr.length; i++) {
+      // separate the keys and the values
+      var a = arr[i].split('=');
+
+      // in case params look like: list[]=thing1&list[]=thing2
+      var paramNum = undefined;
+      var paramName = a[0].replace(/\[\d*\]/, function(v) {
+        paramNum = v.slice(1,-1);
+        return '';
+      });
+
+      // set parameter value (use 'true' if empty)
+      var paramValue = typeof(a[1])==='undefined' ? true : a[1];
+
+      // (optional) keep case consistent
+      paramName = paramName.toLowerCase();
+      paramValue = paramValue.toLowerCase();
+
+      // if parameter name already exists
+      if (obj[paramName]) {
+        // convert value to array (if still string)
+        if (typeof obj[paramName] === 'string') {
+          obj[paramName] = [obj[paramName]];
+        }
+        // if no array index number specified...
+        if (typeof paramNum === 'undefined') {
+          // put the value on the end of the array
+          obj[paramName].push(paramValue);
+        }
+        // if array index number specified...
+        else {
+          // put the value at that index number
+          obj[paramName][paramNum] = paramValue;
+        }
+      }
+      // if param name doesn't exist yet, set it
+      else {
+        obj[paramName] = paramValue;
+      }
+    }
+  }
+  return obj;
+};
+
+/**
+ *
+ * @IMPORTANT - The url of the website you wish to redirect to should NOT have www within url. This is currently not supported.
+ *
+ *
+ * @description Purpose - Class is used to request the bolds freeGeoIpAPI endpoint. Will then compare against array of redirects
+ * If it finds a valid one, will redirect the website to that redirects redirect_url property.
+ * @param {Array} redirects - An Array of objects, each object requiring 4 properties: country_code, country_name,
+ * redirect_url, force_redirect.
+ * @param {Object} options - Options to overwrite defaults
+ */
+BOLD.BMS.Geolocation.ajaxfreeGeoIp = function(redirects, origin, options) {
+  //call our constructor and initialize.
+  this.defaults = {
+    type: "ip-api",
+    requestTries: 0,
+    websiteOrigin: origin,
+    requestAPI: 'https://pro.ip-api.com/json/?key=uSedZzXIOIicN0K',
+    callback: this.redirect
+  };
+
+  if(this.isSkipRedirect()){
+    BOLD.BMS.Geolocation.Storage.isDisabled = true;
+  } else {
+    this.init(redirects, options);
+  }
+};
+
+BOLD.BMS.Geolocation.ajaxfreeGeoIp.prototype = {
+  /**
+   * @param {Array} redirects - An Array of objects, each object requiring 4 properties: country_code, country_name,
+   * redirect_url, force_redirect.
+   * @param {Object} options - Options to overwrite defaults
+   */
+  init: function (redirects, options) {
+    this.saveOptions(options);
+    this.redirects = redirects;
+    this.options = options;
+    this.ajaxForGeoLocation();
+    this.configureWebsiteOrigin();
+  },
+
+  /**
+   * @description Purpose - To check if the user passed the url param of debug=true when hitting the website. If this is
+   * the case. Set a session variable to disable this functionality for the rest of the users browsing session.
+   */
+  isSkipRedirect: function(){
+    return this.isInIframe() ||
+      ("debugmode" in BOLD.helpers.getAllUrlParams() && BOLD.helpers.getAllUrlParams().debugmode === 'true') ||
+      ("skipredirect" in BOLD.helpers.getAllUrlParams() && BOLD.helpers.getAllUrlParams().skipredirect === 'true');
+  },
+  isInIframe: function() {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
+  },
+  /**
+   * @description Purpose - Takes the classes websiteOrigin ( grabbed using window.location.origin ) and replaces https://www.
+   * and http://www. with just https:// or http://
+   * @return - A website origin url without www.
+   */
+  configureWebsiteOrigin: function() {
+    if(this.websiteOrigin.indexOf('https://www.') !== -1 ){
+      this.websiteOrigin = this.websiteOrigin.replace('https://www.', 'https://');
+    }
+    else if(this.websiteOrigin.indexOf('http://www.') !== -1){
+      this.websiteOrigin = this.websiteOrigin.replace('http://www.', 'http://');
+    }
+  },
+
+  /**
+   * @param {Object} options  - An object containing key value pairs to override the default options
+   * @return - Updated options
+   */
+  saveOptions: function (options) {
+    for (var key in this.defaults) {
+      //If a corresponding option was passed in, use that. Otherwise, use the default
+      this[key] = (options && options[key]) ? options[key] : this.defaults[key];
+    }
+  },
+
+  /**
+   * @param {Object} data - A Json object returned from the Ajax request
+   * @description Purpose - Loops over all redirects if they exist, if the redirect does not have force_redirect set to true, or if
+   * the website origin is not equal to the redirects url do nothing, else run the redirect function
+   */
+  handleRedirects: function(data){
+    if(!this.redirects || this.redirects.length < 1){
+      return;
+    }
+    this.redirects.forEach(function(redirect){
+      if(!redirect.force_redirect || this.websiteOrigin.toLowerCase() === redirect.country_code.toLowerCase()){
+        return; // if we don't want to force a redirect, or if the websites origin is equal to where we request from, do nothing.
+      }
+      if((data.country_code.toUpperCase() === redirect.country_code.toUpperCase()) &&  data.country_name.toUpperCase() === redirect.country_name.toUpperCase()){
+        this.callback(data, redirect);
+      }
+    }.bind(this));
+  },
+  /**
+   *
+   * @param {Object} data - A Json object returned from the Ajax request
+   * @param {String} country_code - property from the this.redirects object
+   * @param {String} country_name - property from the this.redirects object
+   * @param {String} redirect_url - property from the this.redirects object
+   * @description Purpose - check if the ajax calls country code and country name match,
+   * if they do then redirect them to the redirect_url
+   */
+  redirect: function(data, redirect){
+    console.log("We shall redirect you now... to", redirect.redirect_url);
+    if(redirect.redirect_url === window.location.href){
+      return;
+    }
+
+    window.location.replace(redirect.redirect_url); // redirect and remove users previous browsing history.
+  },
+  /**
+   * @description Purpose - request the api set either by default (currently only supports https://freegeoip.boldapps.net/json/ )
+   * Will try 5 times before throwing an error.
+   */
+  ajaxForGeoLocation: function() {
+    BOLD.helpers.get(this.requestAPI,
+      function(payload){
+        //Success callback
+        if (!payload) {
+          this.throwError("The Ajax call finished successfully, but Data was malformed.");
+        }
+
+        // TODO: Refactor this switch case and create a proper class for geolocation
+        var data = payload;
+        switch(this.type) {
+          case "ip-api": {
+            data = {
+              ip: data.query,
+              country_code: data.countryCode,
+              country_name: data.country,
+              region_code: data.regionCode,
+              region_name: data.region,
+              city: data.city,
+              zip_code: data.zip,
+              time_zone: data.timezone,
+              latitude: data.lat,
+              longitude: data.lon,
+              metro_code: 0
+            }
+            break;
+          }
+        }
+
+        if (!data.country_name || !data.country_code){
+          this.throwError(this.requestAPI +" API no longer contains country_code or country_name as response parameters, causing this app to break!");
+        }
+        this.handleRedirects(data);
+      }.bind(this),
+      function(err) {
+        if(this.requestTries < 5){
+          this.requestTries++;
+          this.ajaxForGeoLocation();
+          return; // Try 5 times b4 throwing error.
+        }
+        this.throwError("An unknown error occurred while making a request to the Geolocation API, Details are:" + err);
+      }.bind(this)
+    );
+  },
+  throwError: function(err){
+    console.error(err);
+    throw err;
+  }
+};
+
+BOLD.BMS.Geolocation.Storage = BOLD.BMS.Geolocation.Storage || {};
+
+BOLD.BMS.Geolocation.Storage = {
+  disabledId: 'isGeolocationDisabled',
+  _isDisabled: null,
+  get isDisabled() {
+    if (this._isDisabled === null) {
+      var result = this.retrieve(this.disabledId);
+      this.isDisabled = result || false;
+    }
+    return this._isDisabled === "true";
+  },
+  set isDisabled(value) {
+    this.store(this.disabledId, value);
+    this._isDisabled = value;
+  },
+  store: function(id, value) {
+    sessionStorage.setItem(id, value);
+  },
+  retrieve: function(id) {
+    return sessionStorage.getItem(id);
+  },
+  remove: function(id) {
+    sessionStorage.removeItem(id);
+  }
+}

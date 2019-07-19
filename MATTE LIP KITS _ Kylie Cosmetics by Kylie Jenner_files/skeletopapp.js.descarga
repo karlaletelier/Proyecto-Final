@@ -1,0 +1,46 @@
+var wireframes = document.getElementsByClassName("pxFormGenerator");
+form_url = 'https://formbuilder.hulkapps.com';
+if(wireframes.length > 0){
+  for (var i = 0; i < wireframes.length; i++) {
+
+    curFrame = wireframes[i];
+    var curfrm = document.getElementById('frame_'+curFrame.id);
+    var available_iframe = document.getElementById(curFrame.id).innerHTML;
+    
+    if(available_iframe.indexOf('iframe') === -1){
+      var str = '<iframe src="'+form_url+'/corepage/customform?id='+curFrame.id+'" id="frame_'+curFrame.id+'" frameborder="0" width="100%">';
+      document.getElementById(curFrame.id).innerHTML = str ;
+    }
+    frame_resize(curFrame.id);
+  }
+}
+
+function frame_resize(id){
+  var iframes = document.getElementsByClassName("pxFormGenerator");
+  if(iframes.length > 0){
+    for (var i = 0; i < iframes.length; i++) {  
+      var width = document.getElementById(id).style.width;
+      var formId = id;
+      var divId = 'frame_'+id;
+      var zino_resize = function (event) {
+          if (event.origin !== form_url) {
+              return;
+          }
+          var zino_iframe = document.getElementById(divId);
+          if (zino_iframe) {
+            if(event.data['formid'] == formId){
+              zino_iframe.style.height = event.data['height'] + "px";
+              if(event.data['scroll_to'] == true){
+                $('html, body').animate({ scrollTop: $('#frame_'+formId).offset().top - 50 }, 1000);
+              }
+            }
+          }
+      };
+      if (window.addEventListener) {
+          window.addEventListener("message", zino_resize, false);
+      } else if (window.attachEvent) {
+          window.attachEvent("onmessage", zino_resize);
+      }
+    }
+  }
+}
